@@ -852,35 +852,117 @@
 
         @media (max-width: 480px) {
             .container {
-                padding: 0 16px;
+                padding: 0 12px;
+            }
+
+            .section-header {
+                margin-bottom: 16px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .cat-row {
+                gap: 8px;
+                margin-bottom: 20px;
+            }
+
+            .cat-chip {
+                padding: 6px 12px;
+                font-size: 11px;
             }
 
             .product-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
             }
 
-            .hero-section h1 {
-                font-size: 28px;
-            }
-
-            .product-info {
+            .product-img-wrap {
+                height: 110px;
                 padding: 12px;
             }
 
-            .product-title {
-                font-size: 14px;
-                margin-bottom: 8px;
+            .product-info {
+                padding: 8px;
             }
 
+            .product-meta {
+                font-size: 7px;
+                margin-bottom: 4px;
+            }
+
+            .product-title {
+                font-size: 12px;
+                margin-bottom: 6px;
+                line-height: 1.2;
+                height: 28px;
+                overflow: hidden;
+            }
+
+            /* Extreme Price Visibility */
             .product-price {
-                font-size: 16px;
+                font-size: 14px;
+                font-weight: 900;
+                color: var(--accent);
             }
 
             .btn-add-cart {
-                width: 36px;
-                height: 36px;
-                border-radius: 12px;
+                width: 30px;
+                height: 30px;
+                border-radius: 8px;
+            }
+
+            .btn-add-cart svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            /* Admin Table Ultra-Fixes */
+            .admin-table th:nth-child(2),
+            .admin-table td:nth-child(2) {
+                display: none;
+            }
+
+            /* Hide Category Column on small mobile */
+
+            .admin-table th,
+            .admin-table td {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .admin-table td strong {
+                font-size: 13px;
+                display: block;
+            }
+
+            .admin-table td .mobile-cat {
+                display: inline-block;
+                font-size: 10px;
+                color: var(--primary);
+                font-weight: 700;
+                margin-top: 2px;
+            }
+
+            .admin-table td .bottle-thumb {
+                width: 32px !important;
+                height: 32px !important;
+            }
+
+            .admin-price {
+                white-space: nowrap;
+                font-weight: 950;
+                color: var(--text);
+                min-width: 60px;
+                text-align: center;
+            }
+
+            .admin-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+                margin-left: 4px;
             }
         }
 
@@ -1055,17 +1137,19 @@
                     </button>
                 </div>
                 <div class="admin-card">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Juice Item</th>
-                                <th>Category</th>
-                                <th>Price</th>
-                                <th style="text-align: right;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-product-list"></tbody>
-                    </table>
+                    <div style="overflow-x: auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Juice Item</th>
+                                    <th class="hide-mobile">Category</th>
+                                    <th>Price</th>
+                                    <th style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-product-list"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1266,9 +1350,26 @@
         function renderAdminList() {
             const list = document.getElementById('admin-product-list');
             list.innerHTML = products.map(p => `<tr>
-                <td><div style="display:flex;align-items:center;gap:16px;"><div style="width:40px;height:40px;background:${p.color}15;border-radius:10px;padding:4px;">${getBottleSVG(p.color)}</div><strong>${p.name}</strong></div></td>
-                <td><span class="hero-badge" style="margin:0;font-size:11px;padding:6px 12px;">${p.category}</span></td><td style="font-weight:700;">$${p.price.toFixed(2)}</td>
-                <td style="text-align:right;"><button class="admin-btn" onclick="openProductModal(${p.id})">\u270f\ufe0f</button><button class="admin-btn" style="color:var(--red);" onclick="deleteProduct(${p.id})">\ud83d\uddd1\ufe0f</button></td></tr>`).join('');
+                <td>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div class="bottle-thumb" style="width:40px;height:40px;background:${p.color}15;border-radius:10px;padding:4px;">${getBottleSVG(p.color)}</div>
+                        <div>
+                            <strong>${p.name}</strong>
+                            <span class="mobile-cat" style="display: none; font-size: 10px; color: var(--primary); font-weight: 700; margin-top: 2px;">${p.category}</span>
+                        </div>
+                    </div>
+                </td>
+                <td class="hide-mobile"><span class="hero-badge" style="margin:0;font-size:11px;padding:6px 12px;">${p.category}</span></td>
+                <td class="admin-price">$${p.price.toFixed(2)}</td>
+                <td style="text-align:right;white-space:nowrap;">
+                    <button class="admin-btn" onclick="openProductModal(${p.id})">✏️</button>
+                    <button class="admin-btn" style="color:var(--red);" onclick="deleteProduct(${p.id})">🗑️</button>
+                </td>
+            </tr>`).join('');
+
+            if (window.innerWidth <= 480) {
+                document.querySelectorAll('.mobile-cat').forEach(el => el.style.display = 'block');
+            }
         }
 
         function filterByCat(cat) {
@@ -1295,9 +1396,19 @@
             document.getElementById('mobile-nav').classList.toggle('active');
         }
 
+        function closeMenu() {
+            document.getElementById('mobile-nav').classList.remove('active');
+        }
+
+        // More robust closing: capture phase catches scrolls starting inside other elements
         window.addEventListener('scroll', () => {
-            if (document.getElementById('mobile-nav')?.classList.contains('active')) toggleMenu();
-        }, { passive: true });
+            if (document.getElementById('mobile-nav')?.classList.contains('active')) closeMenu();
+        }, { passive: true, capture: true });
+
+        // Touchmove as backup for mobile specific scrolling
+        window.addEventListener('touchmove', () => {
+            if (document.getElementById('mobile-nav')?.classList.contains('active')) closeMenu();
+        }, { passive: true, capture: true });
 
         function addToCart(id) {
             if (!currentUser) return openAuth('signup');
