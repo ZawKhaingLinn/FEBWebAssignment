@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PureSip | Fresh Organic Cold-Pressed Juices</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #2D6A4F;
+            --primary-light: #40916C;
+            --primary-very-light: #D8F3DC;
+            --accent: #FF9F1C;
+            --bg: #F8FAF9;
+            --white: #FFFFFF;
+            --text: #1B4332;
+            --text-sub: #52796F;
+            --border: #E0E7E3;
+            --red: #D90429;
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 32px;
+            --shadow-sm: 0 4px 12px rgba(45, 106, 79, 0.05);
+            --shadow-md: 0 12px 32px rgba(45, 106, 79, 0.08);
+            --shadow-lg: 0 24px 64px rgba(45, 106, 79, 0.12);
+            --font: 'Outfit', -apple-system, sans-serif;
+            --glass: rgba(255, 255, 255, 0.85);
+            --header-h: 90px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        .page {
+            display: none;
+            padding-top: calc(var(--header-h) + 60px);
+            padding-bottom: 100px;
+            animation: fadeIn 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- HEADER --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-h);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            transition: all 0.4s ease;
+        }
+
+        .nav-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 26px;
+            color: var(--primary);
+            cursor: pointer;
+            letter-spacing: -0.5px;
+        }
+
+        .logo svg {
+            width: 40px;
+            height: 40px;
+            filter: drop-shadow(0 4px 8px rgba(45, 106, 79, 0.2));
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-sub);
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            color: var(--primary);
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: var(--white);
+            border: 1px solid var(--border);
+        }
+
+        .icon-btn:hover {
+            background: var(--primary-very-light);
+            color: var(--primary);
+            transform: translateY(-2px);
+            border-color: var(--primary-light);
+        }
+
+        .badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--accent);
+            color: var(--white);
+            font-size: 11px;
+            font-weight: 800;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--white);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+            padding: 14px 28px;
+            border-radius: 20px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.4s;
+            box-shadow: 0 8px 20px rgba(45, 106, 79, 0.15);
+            font-size: 15px;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(45, 106, 79, 0.25);
+        }
+
+        /* --- HERO --- */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 80px;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--primary-very-light);
+            color: var(--primary);
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .hero-section h1 {
+            font-size: 64px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 24px;
+            letter-spacing: -2px;
+            line-height: 1.1;
+        }
+
+        .hero-section p {
+            color: var(--text-sub);
+            font-size: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* --- PRODUCT GRID --- */
+        .section-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        /* --- CATEGORIES --- */
+        .cat-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+        }
+
+        .cat-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cat-chip {
+            padding: 10px 20px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+            color: var(--text-sub);
+        }
+
+        .cat-chip:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .cat-chip.active {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(45, 106, 79, 0.2);
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            border: 1px solid var(--border);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-light);
+        }
+
+        .product-img-wrap {
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #F1F5F2;
+            position: relative;
+            padding: 30px;
+            overflow: hidden;
+        }
+
+        .product-img-wrap svg {
+            width: 100%;
+            height: 100%;
+            transition: 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.1));
+        }
+
+        .product-card:hover .product-img-wrap svg {
+            transform: scale(1.06) rotate(-2deg);
+        }
+
+        .product-info {
+            padding: 18px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-meta {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .product-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .product-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+        }
+
+        .product-price {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .btn-add-cart {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            border: none;
+            background: var(--primary);
+            color: var(--white);
+            cursor: pointer;
+            transition: 0.4s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-add-cart:hover {
+            background: var(--accent);
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 6px 16px rgba(255, 159, 28, 0.3);
+        }
+
+        /* --- CART PAGE --- */
+        .cart-layout {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 48px;
+        }
+
+        .cart-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .cart-item {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            border: 1px solid var(--border);
+            transition: 0.3s;
+        }
+
+        .cart-item:hover {
+            border-color: var(--primary-very-light);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cart-item-img {
+            width: 120px;
+            height: 120px;
+            background: #f0f0f0;
+            border-radius: var(--radius-sm);
+            padding: 12px;
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-item-details h4 {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+
+        .cart-item-details p {
+            color: var(--text-sub);
+            font-size: 14px;
+            margin-bottom: 0;
+        }
+
+        .qty-input {
+            display: flex;
+            align-items: center;
+            background: #F1F5F2;
+            border-radius: 12px;
+            padding: 6px;
+            gap: 4px;
+        }
+
+        .qty-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: none;
+            background: var(--white);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 18px;
+            transition: 0.2s;
+            color: var(--primary);
+        }
+
+        .qty-btn:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .qty-text {
+            width: 44px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        .cart-sidebar {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: 40px;
+            border: 1px solid var(--border);
+            position: sticky;
+            top: 150px;
+            height: fit-content;
+        }
+
+        .order-summary-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 32px;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+        .summary-line.total {
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        /* --- ADMIN DASHBOARD --- */
+        .admin-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 48px;
+        }
+
+        .admin-card {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table th {
+            background: #F8FAF9;
+            padding: 20px 32px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .admin-table td {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .admin-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--white);
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 18px;
+        }
+
+        .admin-btn:hover {
+            background: var(--primary-very-light);
+            border-color: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        /* --- MODALS --- */
+        .modal-wrap {
+            position: fixed;
+            inset: 0;
+            background: rgba(27, 67, 50, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-inner {
+            background: var(--white);
+            width: 100%;
+            max-width: 540px;
+            border-radius: var(--radius-lg);
+            padding: 48px;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+            animation: popIn 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-sub);
+            transition: 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--red);
+            transform: rotate(90deg);
+        }
+
+        .form-row {
+            margin-bottom: 32px;
+        }
+
+        .form-row label {
+            display: block;
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .field {
+            width: 100%;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-family: inherit;
+            font-size: 16px;
+            transition: 0.3s;
+            background: #F8FAF9;
+        }
+
+        .field:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--white);
+            box-shadow: 0 0 0 5px var(--primary-very-light);
+        }
+
+        /* --- USER & PROFILE --- */
+        .profile-container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .profile-hero {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: 48px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .avatar-box {
+            width: 100px;
+            height: 100px;
+            background: var(--primary);
+            color: white;
+            border-radius: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 40px;
+            font-weight: 800;
+            box-shadow: 0 10px 20px rgba(45, 106, 79, 0.2);
+        }
+
+        /* --- TOAST --- */
+        .toast-msg {
+            position: fixed;
+            bottom: 48px;
+            right: 48px;
+            background: var(--text);
+            color: var(--white);
+            padding: 20px 32px;
+            border-radius: 20px;
+            font-weight: 700;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 3000;
+            transform: translateX(200%);
+            transition: 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .toast-msg.active {
+            transform: translateX(0);
+        }
+
+        /* --- HELPERS --- */
+        .admin-only {
+            display: none;
+        }
+
+        .btn-plus {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--primary);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 20px;
+            border: none;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-plus:hover {
+            background: var(--primary-light);
+            transform: translateY(-3px) scale(1.02);
+        }
+
+        @media (max-width: 1024px) {
+            .cart-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-section h1 {
+                font-size: 48px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 24px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            header {
+                height: 80px;
+            }
+
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        #setup-splash {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Setup Splash -->
+    <div id="setup-splash" style="display: none;">
+        <div class="avatar-box"
+            style="background: var(--primary-very-light) !important; color: var(--primary) !important;">🥤</div>
+        <h1 style="margin-bottom: 12px; font-weight: 800; letter-spacing: -1.5px;">Welcome to PureSip</h1>
+        <p style="color: var(--text-sub); margin-bottom: 32px; max-width: 440px; font-weight: 500;">
+            Your professional juice shop is almost ready! Please link your Supabase database in the
+            <code>index.html</code> code.
+        </p>
+        <div
+            style="background: #f1f5f2; padding: 24px; border-radius: 16px; font-size: 14px; text-align: left; border: 1px solid var(--border); max-width: 500px;">
+            <p style="margin-bottom: 12px; font-weight: 700;">Connection Guide:</p>
+            <ol style="padding-left: 20px; color: var(--text-sub);">
+                <li>Open your <strong>Supabase Dashboard</strong></li>
+                <li>Run the provided <strong>SQL Setup Script</strong></li>
+                <li>Go to the bottom of <code>index.html</code> and paste your credentials</li>
+            </ol>
+        </div>
+        <button class="btn-primary" style="margin-top: 32px; padding: 16px 48px;" onclick="location.reload()">I'm
+            Connected!</button>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-content">
+            <div class="logo" onclick="goPage('home')">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="12" fill="var(--primary)" />
+                    <path
+                        d="M20 10C14.4772 10 10 14.4772 10 20C10 25.5228 14.4772 30 20 30C25.5228 30 30 25.5228 30 20C30 14.4772 25.5228 10 20 10ZM12 20C12 15.5817 15.5817 12 20 12C24.4183 12 28 15.5817 28 20C28 24.4183 24.4183 28 20 28C15.5817 28 12 24.4183 12 20Z"
+                        fill="white" />
+                </svg>
+                PureSip
+            </div>
+            <nav class="nav-links">
+                <a class="nav-link active" id="nl-home" onclick="goPage('home')">Shop</a>
+                <a class="nav-link" id="nl-contact" onclick="goPage('contact')">Contact</a>
+                <a class="nav-link" id="nl-admin" onclick="goPage('admin')" style="display: none;">Dashboard</a>
+            </nav>
+            <div class="header-actions">
+                <div id="auth-section" style="display: flex; gap: 12px;">
+                    <button class="nav-link" style="padding: 0 10px;" onclick="openAuth('login')">Log In</button>
+                    <button class="btn-primary" onclick="openAuth('signup')">Get Started</button>
+                </div>
+                <div id="user-section" style="display: none; align-items: center; gap: 20px;">
+                    <button class="icon-btn" onclick="goPage('cart')" title="Your Cart">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                            </path>
+                        </svg>
+                        <span id="cbadge" class="badge" style="display: none;">0</span>
+                    </button>
+                    <button class="icon-btn" onclick="goPage('profile')" title="Your Profile" style="padding: 4px;">
+                        <div id="user-initial" class="avatar-box"
+                            style="width: 32px; height: 32px; font-size: 14px; margin: 0; background: var(--primary); border-radius: 12px; color: white;">
+                            A</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Home / Shop -->
+        <section id="pg-home" class="page active">
+            <div class="container">
+                <div class="hero-section">
+                    <span class="hero-badge">Organic & Cold Pressed</span>
+                    <h1>Freshness Bottled <br>With Pure Intention</h1>
+                    <p>Experience the ultimate hydration with our farm-to-bottle cold pressed juices. 100% natural, raw,
+                        and revitalizing.</p>
+                </div>
+                <div class="section-header">
+                    <h2 class="section-title">Fresh Harvest</h2>
+                    <p id="item-count" style="color: var(--text-sub); font-weight: 600;">0 items available</p>
+                </div>
+                <div class="cat-row" id="home-cats">
+                    <button class="cat-chip active" onclick="filterByCat('All')">All Drinks</button>
+                    <button class="cat-chip" onclick="filterByCat('Cold Pressed')">Cold Pressed</button>
+                    <button class="cat-chip" onclick="filterByCat('Smoothies')">Smoothies</button>
+                    <button class="cat-chip" onclick="filterByCat('Wellness Shots')">Wellness Shots</button>
+                    <button class="cat-chip" onclick="filterByCat('Detox Kits')">Detox Kits</button>
+                </div>
+                <div id="main-grid" class="product-grid">
+                    <div style="grid-column: 1/-1; text-align: center; padding: 100px; color: var(--text-sub);">
+                        <div class="avatar-box" style="margin: 0 auto 24px;">⌛</div>
+                        <p style="font-size: 18px;">Preparing the harvest...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cart View -->
+        <section id="pg-cart" class="page">
+            <div class="container">
+                <div class="section-header" style="margin-bottom: 60px;">
+                    <h2 class="section-title">Your Harvest <span id="cart-count-title"
+                            style="color: var(--text-sub); font-weight: 500; margin-left:12px;">(0)</span></h2>
+                </div>
+                <div id="ecart" style="display: none; text-align: center; padding: 100px 0;">
+                    <div style="font-size: 72px; margin-bottom: 24px;">🧺</div>
+                    <h3 style="margin-bottom: 12px; font-size: 28px;">Your basket is empty</h3>
+                    <p style="color: var(--text-sub); margin-bottom: 40px; font-size: 18px;">Fuel your body with
+                        something refreshing.</p>
+                    <button class="btn-primary" onclick="goPage('home')">Return to Shop</button>
+                </div>
+                <div id="cart-wrap" class="cart-layout">
+                    <div id="cart-items" class="cart-list"></div>
+                    <div class="cart-sidebar">
+                        <h3 class="order-summary-title">Order Total</h3>
+                        <div class="summary-line"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+                        <div class="summary-line"><span>Delivery</span><span>$5.00</span></div>
+                        <div class="summary-line total"><span>Grand Total</span><span id="total"
+                                style="color: var(--primary);">$0.00</span></div>
+                        <button class="btn-primary"
+                            style="width: 100%; margin-top: 40px; height: 64px; font-size: 17px;"
+                            onclick="toast('Order success! \ud83d\udcb3')">Place Your Order</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Dashboard -->
+        <section id="pg-admin" class="page">
+            <div class="container">
+                <div class="admin-top">
+                    <div>
+                        <h2 class="section-title">Store Management</h2>
+                        <p style="color: var(--text-sub); font-weight: 500;">Live inventory control and product
+                            management.</p>
+                    </div>
+                    <button class="btn-plus" onclick="openProductModal()">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="3"
+                            viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14"></path>
+                        </svg>
+                        Add New Juice
+                    </button>
+                </div>
+                <div class="admin-card">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Juice Item</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-product-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile Page -->
+        <section id="pg-profile" class="page">
+            <div class="container">
+                <div class="profile-container">
+                    <div class="profile-hero">
+                        <div id="profile-avatar" class="avatar-box">U</div>
+                        <h2 id="profile-name" style="margin-bottom: 8px; font-size: 32px;">User Profile</h2>
+                        <p id="profile-email" style="color: var(--text-sub); margin-bottom: 40px; font-weight: 600;">
+                            user@example.com</p>
+                        <button class="btn-primary" style="background: #FEE2E2; color: var(--red); box-shadow: none;"
+                            onclick="signOut()">Log Out</button>
+                    </div>
+                    <div class="admin-card" style="padding: 48px;">
+                        <h3 style="margin-bottom: 32px; font-size: 24px;">Edit Profile Information</h3>
+                        <form onsubmit="updateProfile(event)">
+                            <div class="form-row"><label>Full Name</label><input type="text" id="edit-name"
+                                    class="field" placeholder="Enter your full name"></div>
+                            <div class="form-row"><label>Email (Permanent)</label><input type="email" id="edit-email"
+                                    class="field" disabled></div>
+                            <div class="form-row"><label>Security: New Password</label><input type="password"
+                                    id="edit-pw" class="field"
+                                    placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (Optional)"></div>
+                            <button type="submit" class="btn-primary" style="width: 100%;">Save New Settings</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Page -->
+        <section id="pg-contact" class="page">
+            <div class="container">
+                <div class="hero-section">
+                    <span class="hero-badge">Reach Out</span>
+                    <h1>How Can We Help?</h1>
+                    <p>Interested in wholesale or have questions about our process? Send us a message below.</p>
+                </div>
+                <div class="admin-card" style="max-width: 800px; margin: 0 auto; padding: 48px;">
+                    <form id="contact-form" onsubmit="handleContact(event)">
+                        <div class="form-row"><label>Full Name</label><input type="text" id="cname" class="field"
+                                required placeholder="Juice Lover"></div>
+                        <div class="form-row"><label>Email Address</label><input type="email" id="cemail" class="field"
+                                required placeholder="you@example.com"></div>
+                        <div class="form-row"><label>Your Inquiry</label><textarea id="cmessage" class="field" required
+                                rows="6" placeholder="What's on your mind?"></textarea></div>
+                        <button type="submit" class="btn-primary" style="width: 100%;">Connect With Us</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <div id="modal-auth" class="modal-wrap">
+        <div class="modal-inner">
+            <span class="modal-close" onclick="closeModal()">\u00d7</span>
+            <h2 id="auth-title" style="margin-bottom: 12px; font-size: 36px; font-weight:800;">Log In</h2>
+            <p id="auth-desc" style="color: var(--text-sub); margin-bottom: 40px; font-weight: 500;">Welcome back to
+                your organic juice haven.</p>
+            <form onsubmit="handleAuth(event)">
+                <div class="form-row"><label>Email Address</label><input type="email" id="auth-email" class="field"
+                        required placeholder="your@email.com"></div>
+                <div class="form-row"><label>Secure Password</label><input type="password" id="auth-password"
+                        class="field" required placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"></div>
+                <button type="submit" id="auth-submit" class="btn-primary"
+                    style="width: 100%; margin-top: 10px; height: 60px;">Continue</button>
+                <div style="text-align: center; margin-top: 32px; font-size: 15px; color: var(--text-sub);">
+                    <span id="auth-switch-text">New to PureSip?</span>
+                    <a href="javascript:void(0)" onclick="toggleAuthMode()" id="auth-switch-btn"
+                        style="color: var(--primary); font-weight: 700; margin-left: 8px;">Create Account</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-product" class="modal-wrap">
+        <div class="modal-inner">
+            <span class="modal-close" onclick="closeProductModal()">\u00d7</span>
+            <h2 id="prod-modal-title" style="margin-bottom: 40px; font-size: 32px; font-weight: 800;">Modify Product
+            </h2>
+            <form id="product-form" onsubmit="saveProduct(event)">
+                <input type="hidden" id="prod-id">
+                <div class="form-row"><label>Product Official Name</label><input type="text" id="prod-name"
+                        class="field" required placeholder="e.g. Amber Glow"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div class="form-row"><label>Category</label><select id="prod-cat" class="field">
+                            <option value="Cold Pressed">Cold Pressed</option>
+                            <option value="Smoothies">Smoothies</option>
+                            <option value="Wellness Shots">Wellness Shots</option>
+                            <option value="Detox Kits">Detox Kits</option>
+                        </select></div>
+                    <div class="form-row"><label>Display Price ($)</label><input type="number" id="prod-price"
+                            class="field" step="0.01" required placeholder="12.99"></div>
+                </div>
+                <div class="form-row"><label>Product Signature Color</label>
+                    <div
+                        style="display: flex; gap: 16px; align-items: center; background: #f8faf9; padding: 12px; border-radius: 12px;">
+                        <input type="color" id="prod-color" class="field"
+                            style="width: 80px; height: 50px; padding: 2px;" value="#2D6A4F">
+                        <span style="color: var(--text-sub); font-size: 14px; font-weight: 500;">Sets the card and
+                            bottle brand theme.</span>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 24px; height: 60px;">Update
+                    Inventory</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toastEl" class="toast-msg">
+        <span id="toast-icon">\ud83c\udf43</span>
+        <span id="toast-text">Success Message</span>
+    </div>
+
+    <script>
+        const SB_URL = 'https://yrktcpnbqlghmvpepxtr.supabase.co';
+        const SB_KEY = 'sb_publishable_eNyUyEa9Q9OeO8Fb54dnMA_mjmwnzV6';
+
+        let sbClient = null;
+        try {
+            if (SB_URL && SB_URL.startsWith('https')) {
+                sbClient = supabase.createClient(SB_URL, SB_KEY);
+            } else { document.getElementById('setup-splash').style.display = 'flex'; }
+        } catch (e) { console.error("Client init error", e); }
+
+        let products = [
+            { id: 1, name: 'Amber Glow', category: 'Cold Pressed', price: 9.99, color: '#FFB703' },
+            { id: 2, name: 'Deep Forest', category: 'Cold Pressed', price: 11.49, color: '#2D6A4F' },
+            { id: 3, name: 'Ruby Rush', category: 'Smoothies', price: 10.99, color: '#D90429' }
+        ];
+        let cart = JSON.parse(localStorage.getItem('ps_cart_v2') || '{}');
+        let currentUser = null;
+        let authMode = 'login';
+
+        function getBottleSVG(color) {
+            return `<svg viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
+                <rect x="35" y="10" width="30" height="25" rx="8" fill="${color}" opacity="0.8"/><rect x="38" y="32" width="24" height="15" rx="4" fill="${color}"/>
+                <path d="M20 50C12 65 12 165 15 180C18 195 82 195 85 180C88 165 88 65 80 50H20Z" fill="${color}"/>
+                <rect x="25" y="105" width="50" height="45" rx="10" fill="white" fill-opacity="0.6"/><rect x="32" y="118" width="36" height="6" rx="3" fill="white" fill-opacity="0.9"/>
+                <rect x="32" y="130" width="28" height="4" rx="2" fill="white" fill-opacity="0.7"/>
+            </svg>`;
+        }
+
+        async function checkUser() {
+            if (!sbClient) return;
+            const { data: { user } } = await sbClient.auth.getUser();
+            if (user) {
+                currentUser = user;
+                updateAuthUI(true);
+                const { data: profile } = await sbClient.from('profiles').select('*').eq('id', user.id).single();
+                if (profile?.role === 'admin') document.getElementById('nl-admin').style.display = 'block';
+            } else { updateAuthUI(false); }
+        }
+
+        function updateAuthUI(isLoggedIn) {
+            document.getElementById('auth-section').style.display = isLoggedIn ? 'none' : 'flex';
+            document.getElementById('user-section').style.display = isLoggedIn ? 'flex' : 'none';
+            if (isLoggedIn) {
+                const name = currentUser.user_metadata?.full_name || 'User';
+                document.getElementById('user-initial').textContent = name[0];
+                document.getElementById('profile-name').textContent = name;
+                document.getElementById('profile-email').textContent = currentUser.email;
+                document.getElementById('edit-name').value = name;
+                document.getElementById('edit-email').value = currentUser.email;
+            }
+        }
+
+        async function fetchProducts() {
+            if (!sbClient) return renderProducts(products);
+            const { data } = await sbClient.from('products').select('*').order('created_at', { ascending: false });
+            if (data) { products = data; renderProducts(data); renderAdminList(); }
+        }
+
+        function renderProducts(list) {
+            const grid = document.getElementById('main-grid');
+            grid.innerHTML = list.map(p => `
+                <div class="product-card">
+                    <div class="product-img-wrap" style="background: ${p.color}10">${getBottleSVG(p.color)}</div>
+                    <div class="product-info">
+                        <div class="product-meta">${p.category}</div>
+                        <h4 class="product-title">${p.name}</h4>
+                        <div class="product-footer">
+                            <span class="product-price">$${p.price.toFixed(2)}</span>
+                            <button class="btn-add-cart" onclick="addToCart(${p.id})"><svg width="24" height="24" fill="white" viewBox="0 0 24 24"><path d="M11 5v6H5v2h6v6h2v-6h6v-2h-6V5z"/></svg></button>
+                        </div>
+                    </div>
+                </div>`).join('');
+            document.getElementById('item-count').textContent = `${list.length} items available`;
+        }
+
+        function renderAdminList() {
+            const list = document.getElementById('admin-product-list');
+            list.innerHTML = products.map(p => `<tr>
+                <td><div style="display:flex;align-items:center;gap:16px;"><div style="width:40px;height:40px;background:${p.color}15;border-radius:10px;padding:4px;">${getBottleSVG(p.color)}</div><strong>${p.name}</strong></div></td>
+                <td><span class="hero-badge" style="margin:0;font-size:11px;padding:6px 12px;">${p.category}</span></td><td style="font-weight:700;">$${p.price.toFixed(2)}</td>
+                <td style="text-align:right;"><button class="admin-btn" onclick="openProductModal(${p.id})">\u270f\ufe0f</button><button class="admin-btn" style="color:var(--red);" onclick="deleteProduct(${p.id})">\ud83d\uddd1\ufe0f</button></td></tr>`).join('');
+        }
+
+        function filterByCat(cat) {
+            document.querySelectorAll('.cat-chip').forEach(c => c.classList.toggle('active', c.textContent.includes(cat)));
+            const filtered = cat === 'All' ? products : products.filter(p => p.category === cat);
+            renderProducts(filtered);
+        }
+
+        function goPage(pg) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('pg-' + pg).classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            if (document.getElementById('nl-' + pg)) document.getElementById('nl-' + pg).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function addToCart(id) {
+            if (!currentUser) return openAuth('signup');
+            cart[id] = (cart[id] || 0) + 1;
+            updateCart();
+            toast(products.find(p => p.id == id).name + ' added! \ud83d\uded2');
+        }
+
+        function updateCart() {
+            localStorage.setItem('ps_cart_v2', JSON.stringify(cart));
+            const ids = Object.keys(cart);
+            let totalItems = 0, sub = 0;
+            ids.forEach(id => {
+                const p = products.find(x => x.id == id);
+                if (p) { totalItems += cart[id]; sub += p.price * cart[id]; }
+            });
+            const badge = document.getElementById('cbadge');
+            badge.style.display = totalItems > 0 ? 'flex' : 'none';
+            badge.textContent = totalItems;
+            document.getElementById('cart-count-title').textContent = `(${totalItems})`;
+
+            if (totalItems === 0) {
+                document.getElementById('ecart').style.display = 'block';
+                document.getElementById('cart-wrap').style.display = 'none';
+            } else {
+                document.getElementById('ecart').style.display = 'none';
+                document.getElementById('cart-wrap').style.display = 'grid';
+                document.getElementById('cart-items').innerHTML = ids.map(id => {
+                    const p = products.find(x => x.id == id);
+                    if (!p) return '';
+                    return `<div class="cart-item"><div class="cart-item-img" style="background:${p.color}15">${getBottleSVG(p.color)}</div>
+                        <div class="cart-item-details"><h4>${p.name}</h4><p>${p.category}</p><div style="font-weight:800;color:var(--primary);margin-top:8px;">$${p.price.toFixed(2)}</div></div>
+                        <div class="qty-input"><button class="qty-btn" onclick="adjustQty(${p.id},-1)">-</button><span class="qty-text">${cart[id]}</span><button class="qty-btn" onclick="adjustQty(${p.id},1)">+</button></div></div>`;
+                }).join('');
+                document.getElementById('subtotal').textContent = `$${sub.toFixed(2)}`;
+                document.getElementById('total').textContent = `$${(sub + 5).toFixed(2)}`;
+            }
+        }
+
+        function adjustQty(id, d) { cart[id] += d; if (cart[id] <= 0) delete cart[id]; updateCart(); }
+
+        function openAuth(mode) {
+            authMode = mode;
+            document.getElementById('auth-title').textContent = mode === 'login' ? 'Log In' : 'Sign Up';
+            document.getElementById('modal-auth').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('modal-auth').style.display = 'none'; }
+        function toggleAuthMode() { openAuth(authMode === 'login' ? 'signup' : 'login'); }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const res = authMode === 'login'
+                ? await sbClient.auth.signInWithPassword({ email, password })
+                : await sbClient.auth.signUp({ email, password });
+            if (res.error) toast(res.error.message);
+            else { toast('Success! \ud83c\udf89'); closeModal(); checkUser(); }
+        }
+
+        async function signOut() { await sbClient.auth.signOut(); currentUser = null; location.reload(); }
+
+        function openProductModal(id = null) {
+            document.getElementById('modal-product').style.display = 'flex';
+            if (id) {
+                const p = products.find(x => x.id == id);
+                document.getElementById('prod-id').value = p.id;
+                document.getElementById('prod-name').value = p.name;
+                document.getElementById('prod-cat').value = p.category;
+                document.getElementById('prod-price').value = p.price;
+                document.getElementById('prod-color').value = p.color;
+            } else { document.getElementById('product-form').reset(); document.getElementById('prod-id').value = ''; }
+        }
+        function closeProductModal() { document.getElementById('modal-product').style.display = 'none'; }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('prod-id').value;
+            const p = { name: document.getElementById('prod-name').value, category: document.getElementById('prod-cat').value, price: parseFloat(document.getElementById('prod-price').value), color: document.getElementById('prod-color').value };
+            const res = id ? await sbClient.from('products').update(p).eq('id', id) : await sbClient.from('products').insert([p]);
+            if (res.error) toast(res.error.message); else { toast('Product Saved!'); closeProductModal(); fetchProducts(); }
+        }
+
+        async function deleteProduct(id) {
+            if (confirm('Delete?')) { await sbClient.from('products').delete().eq('id', id); fetchProducts(); }
+        }
+
+        async function handleContact(e) {
+            e.preventDefault();
+            const p = { name: document.getElementById('cname').value, email: document.getElementById('cemail').value, message: document.getElementById('cmessage').value };
+            await sbClient.from('contact_messages').insert([p]);
+            toast('Message sent! \u2709\ufe0f'); e.target.reset();
+        }
+
+        async function updateProfile(e) {
+            e.preventDefault();
+            await sbClient.auth.updateUser({ data: { full_name: document.getElementById('edit-name').value } });
+            if (document.getElementById('edit-pw').value) await sbClient.auth.updateUser({ password: document.getElementById('edit-pw').value });
+            toast('Profile updated!'); checkUser();
+        }
+
+        function toast(m) {
+            const el = document.getElementById('toastEl');
+            document.getElementById('toast-text').textContent = m;
+            el.classList.add('active');
+            setTimeout(() => el.classList.remove('active'), 3000);
+        }
+
+        window.onload = () => { checkUser(); fetchProducts(); updateCart(); };
+    </script>
+</body>
+
+</html>
