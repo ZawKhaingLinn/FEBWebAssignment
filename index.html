@@ -756,6 +756,111 @@
             transform: translateY(-3px) scale(1.02);
         }
 
+        /* --- ORDERS & TRACKING --- */
+        .order-card {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: 0.3s;
+        }
+
+        .order-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-light);
+        }
+
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-processing {
+            background: #EEF2FF;
+            color: #4F46E5;
+        }
+
+        .status-way {
+            background: #FEF3C7;
+            color: #D97706;
+        }
+
+        .status-delivered {
+            background: #ECFDF5;
+            color: #059669;
+        }
+
+        .tracking-journey {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 32px;
+            position: relative;
+            padding: 0 10px;
+        }
+
+        .tracking-journey::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 20px;
+            height: 2px;
+            background: #f0f0f0;
+            z-index: 1;
+        }
+
+        .journey-step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            flex: 1;
+        }
+
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: 0.3s;
+            border: 4px solid var(--white);
+        }
+
+        .journey-step.active .step-dot {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 0 4px var(--primary-very-light);
+        }
+
+        .step-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-sub);
+            text-transform: uppercase;
+        }
+
+        .journey-step.active .step-label {
+            color: var(--primary);
+        }
+
+        .admin-action-bar {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed var(--border);
+        }
+
         @media (max-width: 1024px) {
             .cart-layout {
                 grid-template-columns: 1fr;
@@ -1113,7 +1218,7 @@
                                 style="color: var(--primary);">$0.00</span></div>
                         <button class="btn-primary"
                             style="width: 100%; margin-top: 40px; height: 64px; font-size: 17px;"
-                            onclick="toast('Order success! \ud83d\udcb3')">Place Your Order</button>
+                            onclick="placeOrder()">Place Your Order</button>
                     </div>
                 </div>
             </div>
@@ -1123,12 +1228,13 @@
         <section id="pg-admin" class="page">
             <div class="container">
                 <div class="admin-top">
-                    <div>
-                        <h2 class="section-title">Store Management</h2>
-                        <p style="color: var(--text-sub); font-weight: 500;">Live inventory control and product
-                            management.</p>
+                    <div style="display: flex; gap: 32px; align-items: center;">
+                        <h2 class="section-title active-tab" id="tab-inventory-btn"
+                            onclick="toggleAdminTab('inventory')" style="cursor:pointer;">Inventory</h2>
+                        <h2 class="section-title" id="tab-orders-btn" onclick="toggleAdminTab('orders')"
+                            style="cursor:pointer; opacity: 0.3;">Orders</h2>
                     </div>
-                    <button class="btn-plus" onclick="openProductModal()">
+                    <button class="btn-plus" id="add-juice-btn" onclick="openProductModal()">
                         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="3"
                             viewBox="0 0 24 24">
                             <path d="M12 5v14M5 12h14"></path>
@@ -1136,20 +1242,31 @@
                         Add New Juice
                     </button>
                 </div>
-                <div class="admin-card">
-                    <div style="overflow-x: auto;">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Juice Item</th>
-                                    <th class="hide-mobile">Category</th>
-                                    <th>Price</th>
-                                    <th style="text-align: right;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-product-list"></tbody>
-                        </table>
+
+                <div id="admin-inventory-view">
+                    <div class="admin-card">
+                        <div style="overflow-x: auto;">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Juice Item</th>
+                                        <th class="hide-mobile">Category</th>
+                                        <th>Price</th>
+                                        <th style="text-align: right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-product-list"></tbody>
+                            </table>
+                        </div>
                     </div>
+                </div>
+
+                <div id="admin-orders-view" style="display: none;">
+                    <div id="empty-orders-admin" style="text-align:center; padding: 60px; color: var(--text-sub);">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📦</div>
+                        <p>No active orders discovered yet.</p>
+                    </div>
+                    <div id="admin-orders-list" class="orders-grid"></div>
                 </div>
             </div>
         </section>
@@ -1174,12 +1291,22 @@
                             <div class="form-row"><label>Email (Permanent)</label><input type="email" id="edit-email"
                                     class="field" disabled></div>
                             <div class="form-row"><label>Security: New Password</label><input type="password"
-                                    id="edit-pw" class="field"
-                                    placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (Optional)"></div>
+                                    id="edit-pw" class="field" placeholder="•••••••• (Optional)"></div>
                             <button type="submit" class="btn-primary" style="width: 100%;">Save New Settings</button>
                         </form>
                     </div>
+
+                    <div style="margin-top: 60px;">
+                        <h3 style="margin-bottom: 32px; font-size: 24px;">Recent Orders</h3>
+                        <div id="user-orders-list">
+                            <div
+                                style="text-align: center; padding: 40px; color: var(--text-sub); background: var(--white); border-radius: 20px; border: 1px dashed var(--border);">
+                                <p>You haven't placed any orders yet. Start your wellness journey today!</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
             </div>
         </section>
 
@@ -1209,7 +1336,7 @@
     <!-- Modals -->
     <div id="modal-auth" class="modal-wrap">
         <div class="modal-inner">
-            <span class="modal-close" onclick="closeModal()">\u00d7</span>
+            <span class="modal-close" onclick="closeModal()">×</span>
             <h2 id="auth-title" style="margin-bottom: 12px; font-size: 36px; font-weight:800;">Log In</h2>
             <p id="auth-desc" style="color: var(--text-sub); margin-bottom: 40px; font-weight: 500;">Welcome back to
                 your organic juice haven.</p>
@@ -1217,7 +1344,7 @@
                 <div class="form-row"><label>Email Address</label><input type="email" id="auth-email" class="field"
                         required placeholder="your@email.com"></div>
                 <div class="form-row"><label>Secure Password</label><input type="password" id="auth-password"
-                        class="field" required placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"></div>
+                        class="field" required placeholder="••••••••"></div>
                 <button type="submit" id="auth-submit" class="btn-primary"
                     style="width: 100%; margin-top: 10px; height: 60px;">Continue</button>
                 <div style="text-align: center; margin-top: 32px; font-size: 15px; color: var(--text-sub);">
@@ -1231,7 +1358,7 @@
 
     <div id="modal-product" class="modal-wrap">
         <div class="modal-inner">
-            <span class="modal-close" onclick="closeProductModal()">\u00d7</span>
+            <span class="modal-close" onclick="closeProductModal()">×</span>
             <h2 id="prod-modal-title" style="margin-bottom: 40px; font-size: 32px; font-weight: 800;">Modify Product
             </h2>
             <form id="product-form" onsubmit="saveProduct(event)">
@@ -1264,7 +1391,7 @@
     </div>
 
     <div id="toastEl" class="toast-msg">
-        <span id="toast-icon">\ud83c\udf43</span>
+        <span id="toast-icon">🍃</span>
         <span id="toast-text">Success Message</span>
     </div>
 
@@ -1390,6 +1517,9 @@
 
             window.scrollTo(0, 0);
             if (document.getElementById('mobile-nav').classList.contains('active')) toggleMenu();
+
+            if (pg === 'profile') fetchUserOrders();
+            if (pg === 'admin') fetchAdminOrders();
         }
 
         function toggleMenu() {
@@ -1414,7 +1544,102 @@
             if (!currentUser) return openAuth('signup');
             cart[id] = (cart[id] || 0) + 1;
             updateCart();
-            toast(products.find(p => p.id == id).name + ' added! \ud83d\uded2');
+            toast(products.find(p => p.id == id).name + ' added! 🛒');
+        }
+
+        async function placeOrder() {
+            if (!currentUser) return openAuth('login');
+            const items = Object.keys(cart).map(id => {
+                const p = products.find(x => x.id == id);
+                return { id: p.id, name: p.name, qty: cart[id], price: p.price };
+            });
+            if (items.length === 0) return toast('Your cart is empty!');
+
+            const total = items.reduce((sum, i) => sum + (i.price * i.qty), 0) + 5;
+            const order = { user_id: currentUser.id, items, total, status: 'Processing' };
+
+            const { data, error } = await sbClient.from('orders').insert([order]).select();
+            if (error) return toast(error.message);
+
+            toast('Order Received! 🥤');
+            cart = {};
+            updateCart();
+            goPage('profile');
+            fetchUserOrders();
+        }
+
+        async function fetchUserOrders() {
+            if (!currentUser || !sbClient) return;
+            const { data } = await sbClient.from('orders').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+            if (data) renderUserOrders(data);
+        }
+
+        function renderUserOrders(list) {
+            const container = document.getElementById('user-orders-list');
+            if (list.length === 0) return;
+            container.innerHTML = list.map(o => {
+                const step = o.status === 'Processing' ? 1 : (o.status === 'On the Way' ? 2 : 3);
+                return `
+                <div class="order-card">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+                        <div>
+                            <p style="font-size:12px; color:var(--text-sub); font-weight:700;">ORDER #${o.id}</p>
+                            <h4 style="font-size:18px; margin-top:4px;">$${o.total.toFixed(2)}</h4>
+                        </div>
+                        <span class="status-badge status-${o.status === 'Processing' ? 'processing' : (o.status === 'On the Way' ? 'way' : 'delivered')}">${o.status}</span>
+                    </div>
+                    <div class="tracking-journey">
+                        <div class="journey-step ${step >= 1 ? 'active' : ''}"><div class="step-dot">1</div><div class="step-label">Processing</div></div>
+                        <div class="journey-step ${step >= 2 ? 'active' : ''}"><div class="step-dot">2</div><div class="step-label">On the Way</div></div>
+                        <div class="journey-step ${step >= 3 ? 'active' : ''}"><div class="step-dot">3</div><div class="step-label">Delivered</div></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function fetchAdminOrders() {
+            if (!sbClient) return;
+            const { data } = await sbClient.from('orders').select('*').order('created_at', { ascending: false });
+            if (data) renderAdminOrders(data);
+        }
+
+        function renderAdminOrders(list) {
+            const container = document.getElementById('admin-orders-list');
+            document.getElementById('empty-orders-admin').style.display = list.length === 0 ? 'block' : 'none';
+            container.innerHTML = list.map(o => `
+                <div class="order-card" style="border-left: 4px solid var(--primary);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <strong>Order #${o.id}</strong>
+                        <span class="status-badge status-${o.status === 'Processing' ? 'processing' : (o.status === 'On the Way' ? 'way' : 'delivered')}">${o.status}</span>
+                    </div>
+                    <div style="font-size:14px; color:var(--text-sub); margin-bottom:12px;">
+                        ${o.items.map(i => `${i.qty}x ${i.name}`).join(', ')}
+                    </div>
+                    <div style="font-weight:800; font-size:16px; margin-bottom:20px;">Total: $${o.total.toFixed(2)}</div>
+                    <div class="admin-action-bar">
+                        ${o.status === 'Processing' ? `<button class="btn-primary" style="height:44px; font-size:13px; flex:1;" onclick="updateOrderStatus(${o.id}, 'On the Way')">Accept Order</button>` : ''}
+                        ${o.status === 'On the Way' ? `<button class="btn-primary" style="height:44px; font-size:13px; flex:1; background:#059669;" onclick="updateOrderStatus(${o.id}, 'Delivered')">Mark Delivered</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function updateOrderStatus(id, status) {
+            const { error } = await sbClient.from('orders').update({ status }).eq('id', id);
+            if (error) return toast(error.message);
+            toast(`Status updated to ${status}`);
+            fetchAdminOrders();
+        }
+
+        function toggleAdminTab(tab) {
+            document.getElementById('admin-inventory-view').style.display = tab === 'inventory' ? 'block' : 'none';
+            document.getElementById('admin-orders-view').style.display = tab === 'orders' ? 'block' : 'none';
+            document.getElementById('add-juice-btn').style.display = tab === 'inventory' ? 'flex' : 'none';
+
+            document.getElementById('tab-inventory-btn').style.opacity = tab === 'inventory' ? '1' : '0.3';
+            document.getElementById('tab-orders-btn').style.opacity = tab === 'orders' ? '1' : '0.3';
+
+            if (tab === 'orders') fetchAdminOrders();
         }
 
         function updateCart() {
@@ -1466,7 +1691,7 @@
                 ? await sbClient.auth.signInWithPassword({ email, password })
                 : await sbClient.auth.signUp({ email, password });
             if (res.error) toast(res.error.message);
-            else { toast('Success! \ud83c\udf89'); closeModal(); checkUser(); }
+            else { toast('Success! 🎉'); closeModal(); checkUser(); }
         }
 
         async function signOut() { await sbClient.auth.signOut(); currentUser = null; location.reload(); }
@@ -1500,7 +1725,7 @@
             e.preventDefault();
             const p = { name: document.getElementById('cname').value, email: document.getElementById('cemail').value, message: document.getElementById('cmessage').value };
             await sbClient.from('contact_messages').insert([p]);
-            toast('Message sent! \u2709\ufe0f'); e.target.reset();
+            toast('Message sent! ✉️'); e.target.reset();
         }
 
         async function updateProfile(e) {
