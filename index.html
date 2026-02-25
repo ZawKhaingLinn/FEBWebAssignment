@@ -158,7 +158,16 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 16px;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            padding: 8px;
         }
 
         .icon-btn {
@@ -759,19 +768,119 @@
 
         @media (max-width: 768px) {
             .container {
-                padding: 0 24px;
-            }
-
-            .nav-links {
-                display: none;
+                padding: 0 20px;
             }
 
             header {
                 height: 80px;
             }
 
+            .nav-links {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .hero-section {
+                margin-bottom: 40px;
+            }
+
+            .hero-section h1 {
+                font-size: 36px;
+                letter-spacing: -1px;
+            }
+
+            .hero-section p {
+                font-size: 16px;
+            }
+
             .product-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+
+            .cat-row {
+                margin-bottom: 24px;
+            }
+
+            .cat-chip {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+
+            .cart-item {
+                gap: 16px;
+                padding: 16px;
+            }
+
+            .cart-item-img {
+                width: 80px;
+                height: 80px;
+            }
+
+            .cart-item-details h4 {
+                font-size: 16px;
+            }
+
+            .mobile-nav {
+                display: none;
+                position: fixed;
+                top: 80px;
+                left: 0;
+                right: 0;
+                background: var(--white);
+                border-bottom: 1px solid var(--border);
+                padding: 24px;
+                z-index: 999;
+                flex-direction: column;
+                gap: 16px;
+                box-shadow: var(--shadow-md);
+            }
+
+            .mobile-nav.active {
+                display: flex;
+            }
+
+            .mobile-nav .nav-link {
+                font-size: 18px;
+                padding: 12px 0;
+                border-bottom: 1px solid #f0f0f0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .hero-section h1 {
+                font-size: 28px;
+            }
+
+            .product-info {
+                padding: 12px;
+            }
+
+            .product-title {
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+
+            .product-price {
+                font-size: 16px;
+            }
+
+            .btn-add-cart {
+                width: 36px;
+                height: 36px;
+                border-radius: 12px;
             }
         }
 
@@ -836,7 +945,7 @@
                     <button class="nav-link" style="padding: 0 10px;" onclick="openAuth('login')">Log In</button>
                     <button class="btn-primary" onclick="openAuth('signup')">Get Started</button>
                 </div>
-                <div id="user-section" style="display: none; align-items: center; gap: 20px;">
+                <div id="user-section" style="display: none; align-items: center; gap: 16px;">
                     <button class="icon-btn" onclick="goPage('cart')" title="Your Cart">
                         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"
                             viewBox="0 0 24 24">
@@ -852,9 +961,21 @@
                             A</div>
                     </button>
                 </div>
+                <button class="menu-toggle" onclick="toggleMenu()">
+                    <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
             </div>
         </div>
     </header>
+
+    <nav id="mobile-nav" class="mobile-nav">
+        <a class="nav-link" onclick="goPage('home'); toggleMenu()">Shop</a>
+        <a class="nav-link" onclick="goPage('contact'); toggleMenu()">Contact</a>
+        <a class="nav-link" id="nl-admin-mob" onclick="goPage('admin'); toggleMenu()"
+            style="display: none;">Dashboard</a>
+    </nav>
 
     <main>
         <!-- Home / Shop -->
@@ -1099,7 +1220,10 @@
                 currentUser = user;
                 updateAuthUI(true);
                 const { data: profile } = await sbClient.from('profiles').select('*').eq('id', user.id).single();
-                if (profile?.role === 'admin') document.getElementById('nl-admin').style.display = 'block';
+                if (profile?.role === 'admin') {
+                    document.getElementById('nl-admin').style.display = 'block';
+                    document.getElementById('nl-admin-mob').style.display = 'block';
+                }
             } else { updateAuthUI(false); }
         }
 
@@ -1156,10 +1280,24 @@
         function goPage(pg) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('pg-' + pg).classList.add('active');
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            if (document.getElementById('nl-' + pg)) document.getElementById('nl-' + pg).classList.add('active');
+
+            // Sync active state for both desktop and mobile links
+            document.querySelectorAll('.nav-link').forEach(l => {
+                const isMatch = l.getAttribute('onclick') && l.getAttribute('onclick').includes(`'${pg}'`);
+                l.classList.toggle('active', !!isMatch);
+            });
+
             window.scrollTo(0, 0);
+            if (document.getElementById('mobile-nav').classList.contains('active')) toggleMenu();
         }
+
+        function toggleMenu() {
+            document.getElementById('mobile-nav').classList.toggle('active');
+        }
+
+        window.addEventListener('scroll', () => {
+            if (document.getElementById('mobile-nav')?.classList.contains('active')) toggleMenu();
+        }, { passive: true });
 
         function addToCart(id) {
             if (!currentUser) return openAuth('signup');
