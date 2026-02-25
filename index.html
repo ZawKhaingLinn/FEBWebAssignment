@@ -1549,23 +1549,32 @@
 
         async function placeOrder() {
             if (!currentUser) return openAuth('login');
-            const items = Object.keys(cart).map(id => {
-                const p = products.find(x => x.id == id);
-                return { id: p.id, name: p.name, qty: cart[id], price: p.price };
-            });
-            if (items.length === 0) return toast('Your cart is empty!');
+            try {
+                const items = Object.keys(cart).map(id => {
+                    const p = products.find(x => x.id == id);
+                    if (!p) throw new Error("Product not found: " + id);
+                    return { id: p.id, name: p.name, qty: cart[id], price: p.price };
+                });
+                if (items.length === 0) return toast('Your cart is empty!');
 
-            const total = items.reduce((sum, i) => sum + (i.price * i.qty), 0) + 5;
-            const order = { user_id: currentUser.id, items, total, status: 'Processing' };
+                const total = items.reduce((sum, i) => sum + (i.price * i.qty), 0) + 5;
+                const order = { user_id: currentUser.id, items, total, status: 'Processing' };
 
-            const { data, error } = await sbClient.from('orders').insert([order]).select();
-            if (error) return toast(error.message);
+                const { data, error } = await sbClient.from('orders').insert([order]).select();
+                if (error) {
+                    console.error("Order Error:", error);
+                    return toast("Error: " + error.message);
+                }
 
-            toast('Order Received! 🥤');
-            cart = {};
-            updateCart();
-            goPage('profile');
-            fetchUserOrders();
+                toast('Order Sent! 🚀');
+                cart = {};
+                updateCart();
+                goPage('profile');
+                fetchUserOrders();
+            } catch (err) {
+                console.error("Place Order JS Error:", err);
+                toast("Checkout Error: Check console");
+            }
         }
 
         async function fetchUserOrders() {
